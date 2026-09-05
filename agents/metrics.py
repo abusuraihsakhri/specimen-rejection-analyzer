@@ -1,7 +1,6 @@
 """
 Prometheus Operational Metrics Exporter for specimen-rejection-analyzer.
 """
-import time
 from typing import Dict, Any
 
 class SystemMetricsCollector:

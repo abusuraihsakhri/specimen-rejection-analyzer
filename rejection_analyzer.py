@@ -4,36 +4,48 @@ Specimen Rejection Analyzer
 Rejection rate pareto and chi-square trend from pre-analytical error logs.
 Stdlib parser / mapper with batch CSV and single lookup.
 """
-import argparse, csv, sys, re, json, pathlib
+import argparse
+import csv
+import sys
 
 def lookup(query, extra=None):
     """Single lookup: token overlap + substring scoring (no deps). Returns top hits."""
     q = str(query).lower().strip()
-    # tiny built-in dictionary per project slug for demo
-    bank = {
-        "loinc-lab-mapper": [("2160-0 Creatinine","creatinine"),("6690-2 WBC","wbc"),("718-7 Hemoglobin","hemoglobin"),("4548-4 HbA1c","hba1c")],
-        "hla-compatibility-matcher": [("A*02:01","A02"),("B*07:02","B07"),("DRB1*15:01","DRB115")],
-        "icd10-ccsr-mapper": [("I10 Hypertension","I10"),("E11 Type 2 diabetes","E11"),("J18 Pneumonia","J18")],
-        "antibiogram-mdr-classifier": [("MDR","multidrug"),("XDR","extensive"),("PDR","pandrug")],
-        "fhir-bundle-validator": [("Patient","patient"),("Observation","observation")],
-        "cyp-drug-interaction-checker": [("CYP3A4 substrate","cyp3a4"),("CYP2D6 inhibitor","cyp2d6")],
-    }
-    candidates = bank.get("specimen-rejection-analyzer", [("generic hit","generic")])
+    # Specimen rejection domain dictionary: (display_label, match_keyword)
+    candidates = [
+        ("Hemolyzed Sample", "hemolyzed"),
+        ("Clotted Specimen", "clotted"),
+        ("Insufficient Volume", "insufficient"),
+        ("Mislabeled Specimen", "mislabeled"),
+        ("Wrong Container Type", "container"),
+        ("Transport Temperature Excursion", "temperature"),
+        ("Expired Collection Tube", "expired"),
+        ("Contaminated Specimen", "contaminated"),
+        ("Incorrect Collection Time", "collection time"),
+        ("Specimen Leakage", "leakage"),
+        ("Icteric Sample", "icteric"),
+        ("Lipemic Sample", "lipemic"),
+        ("Hemolysis Index Exceeded", "hemolysis"),
+        ("Duplicate Order", "duplicate"),
+        ("Missing Order / Requisition", "missing"),
+        ("QNS - Quantity Not Sufficient", "qns"),
+    ]
     scored=[]
-    for label,key in candidates:
+    for label, key in candidates:
         score = 0
-        if key in q: score+=10
+        if key in q:
+            score += 10
         # token overlap
-        qt=set(q.split()); lt=set(label.lower().split())
-        overlap=len(qt & lt)
-        score+=overlap*2
-        scored.append((score,label))
-    scored.sort(reverse=True)
-    top=scored[0] if scored else (0,"no match")
+        qt = set(q.split())
+        lt = set(label.lower().split())
+        overlap = len(qt & lt)
+        score += overlap * 2
+        scored.append((score, label))
+    scored.sort(reverse=True, key=lambda x: x[0])
+    top = scored[0] if scored else (0, "no match")
     return {"query": query, "top_hit": top[1], "score": top[0], "all": scored[:3]}
 
 def process_csv(inp,out):
-    import csv
     with open(inp, newline="", encoding="utf-8-sig") as f:
         r=csv.DictReader(f); rows=list(r); fn=r.fieldnames
         # guess query column

@@ -1,7 +1,7 @@
 # Specimen Rejection Analyzer
 
-> **Domain:** Clinical Decision Support & Biomedical Computing  
-> **Reference Guidelines & Standards:** `Standard Clinical Formulations & ISO/IEC Quality Frameworks`
+> **Domain:** Clinical Decision Support & Biomedical Computing
+> **Standards:** CAP / CLSI / ISO Standards
 
 <div align="center">
 
@@ -16,93 +16,199 @@
 
 ---
 
-## 📖 What It Does
+## Overview
 
-Specimen Rejection Analyzer
-Rejection rate pareto and chi-square trend from pre-analytical error logs.
-Stdlib parser / mapper with batch CSV and single lookup.
+Specimen Rejection Analyzer processes pre-analytical error logs to identify rejection patterns using pareto analysis and chi-square trend detection. It provides a stdlib-based parser/mapper with batch CSV processing and single lookup capabilities for clinical laboratory workflows.
 
 ---
 
-## ⚙️ Key Capabilities & Algorithmic Modules
+## Key Features
 
-### 🔬 Analytical Functions
+### Core Analysis
+- **Token-based Lookup**: Substring scoring and token overlap matching for specimen rejection reason classification
+- **CSV Batch Processing**: Process multiple records with automatic column detection
+- **Pareto Analysis**: Identify the most frequent rejection causes
+- **Multi-worker Evaluation**: Distributed component architecture with QC, Safety, and Protocol Conformance workers
 
-- **`lookup()`**: Single lookup: token overlap + substring scoring (no deps). Returns top hits.
-- **`process_csv()`** — calculates and validates process_csv parameters.
-- **`build_parser()`** — calculates and validates build_parser parameters.
-- **`main()`** — calculates and validates main parameters.
+### Security
+- **Zero-PHI Outbound Guard**: AST and regex inspection blocking SSNs, MRNs, phone numbers, emails, and patient identifiers
+- **HMAC-SHA256 Audit Trail**: Chained, cryptographically signed logs for every evaluation
+- **Path Traversal Protection**: Safe file I/O with working directory containment
+
+### API & CLI
+- **FastAPI REST Server**: OpenAPI 3.1 endpoints with Prometheus metrics
+- **CLI Interface**: Interactive and parameterized modes for single and batch processing
+- **WebSocket Telemetry**: Real-time streaming of evaluation events
 
 ---
 
-## 📐 Mathematical Formulation & Logic
+## Installation
 
-```text
-  score = 0
+```bash
+# Clone the repository
+git clone https://github.com/abusuraihsakhri/specimen-rejection-analyzer.git
+cd specimen-rejection-analyzer
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/macOS
+# .venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install fastapi uvicorn pydantic pytest
 ```
 
 ---
 
-## 💻 CLI Quickstart & Usage
+## Usage
 
-### 1. Guided Interactive Mode
+### CLI Commands
+
+#### Single Task Evaluation
 ```bash
-python cli.py
+python cli.py audit --task-id TASK-001 --target SPECIMEN-01 --primary 28.5 --secondary 14.2 --critical --status DISCORDANT
 ```
 
-### 2. Direct Parameterized Evaluation
+#### Batch CSV Processing
 ```bash
-python cli.py --task-id <value> --target <value> --primary <value> --secondary <value>
+python cli.py batch -i sample.csv -o results.csv
 ```
 
-### Parameter Reference
-- `--task-id`: Specifies input measurement or parameter value.
-- `--target`: Specifies input measurement or parameter value.
-- `--primary`: Specifies input measurement or parameter value.
-- `--secondary`: Specifies input measurement or parameter value.
-- `--critical`: Specifies input measurement or parameter value.
-- `--status`: Specifies input measurement or parameter value.
-- `--input`: Specifies input measurement or parameter value.
-- `--output`: Specifies input measurement or parameter value.
+#### Supervisory Chat
+```bash
+python cli.py chat "What are common rejection reasons?"
+```
 
-### Input Data Schema
+#### Verify Audit Integrity
+```bash
+python cli.py verify-audit
+```
 
-| Field | Description | Requirement |
-|:------|:------------|:------------|
-| `query` | Parameter / observation metric | Required |
-| `name` | Parameter / observation metric | Required |
+#### Launch REST Server
+```bash
+python cli.py serve --host 127.0.0.1 --port 8000
+```
+
+### Direct Analyzer Module
+```bash
+# Single lookup
+python rejection_analyzer.py single creatinine
+
+# Batch CSV processing
+python rejection_analyzer.py batch --input sample.csv --output results.csv
+```
+
+### REST API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health check |
+| GET | `/metrics` | Prometheus metrics |
+| POST | `/api/audit` | Submit task for evaluation |
+| POST | `/api/chat` | Supervisory chat query |
+| GET | `/api/audit/logs` | Retrieve audit trail |
 
 ---
 
-## 🛡️ Security & Enterprise Architecture
+## Input Data Schema
 
-* **Zero-PHI Outbound Interceptor:** Active AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition.
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
-* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
-* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
+### CSV Batch Format
+```csv
+task_id,target_identifier,primary_metric,secondary_metric,status_descriptor,is_critical_flag
+TASK-001,SPECIMEN-01,28.5,14.2,DISCORDANT,false
+TASK-002,SPECIMEN-02,10.5,3.1,NOMINAL,false
+```
+
+### Field Descriptions
+
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| `task_id` | string | Unique task/case identifier | Yes |
+| `target_identifier` | string | Specimen or target identifier | Yes |
+| `primary_metric` | float | Primary measurement value | Yes |
+| `secondary_metric` | float | Secondary measurement value | No (default: 0.0) |
+| `status_descriptor` | string | Status code (NOMINAL, DISCORDANT, etc.) | No (default: NOMINAL) |
+| `is_critical_flag` | boolean | Critical escalation flag | No (default: false) |
 
 ---
 
-## 🧪 Testing & Verification
+## Configuration
 
-Run the automated test suite:
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AUDIT_SECRET_KEY` | HMAC signing key for audit trail | Auto-generated (ephemeral) |
+| `MODEL_PROVIDER` | LLM provider (mock, ollama, claude, openai) | mock |
+
+---
+
+## Testing
 
 ```bash
+# Run full test suite
 pytest -v
+
+# Run with coverage
+pytest -v --cov=agents --cov=.
+
+# Run specific test module
+pytest tests/test_cli_security.py -v
 ```
 
-Execute high-throughput batch simulation benchmarks:
+### Test Coverage
+- PHI guard enforcement
+- Worker evaluation logic
+- Supervisor consensus and audit
+- CLI security (path traversal, input validation)
+- Enrichment engine execution
+
+---
+
+## Docker Deployment
 
 ```bash
-python simulator.py --tasks 1000 --concurrency 8
+# Build and run with Docker Compose
+export AUDIT_SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
+docker compose up --build
+
+# Or use Docker directly
+docker build -t specimen-rejection-analyzer .
+docker run -p 8000:8000 -e AUDIT_SECRET_KEY=$AUDIT_SECRET_KEY specimen-rejection-analyzer
 ```
 
 ---
 
-## 🐳 Container Deployment
+## Project Structure
 
-```bash
-docker build -t specimen-rejection-analyzer .
-docker run -p 8000:8000 specimen-rejection-analyzer
 ```
+specimen-rejection-analyzer/
+├── agents/                  # Enterprise agent framework
+│   ├── api.py              # FastAPI REST server
+│   ├── base.py             # Security, PHI guard, audit trail
+│   ├── learning.py         # Bayesian calibration engine
+│   ├── llm_factory.py      # LLM provider abstraction
+│   ├── metrics.py          # Prometheus metrics
+│   ├── models.py           # Pydantic data models
+│   ├── streamer.py         # WebSocket telemetry
+│   ├── supervisor.py       # Multi-agent orchestrator
+│   └── workers.py          # Domain-specific workers
+├── tests/                  # Test suite
+│   ├── test_cli_security.py
+│   ├── test_enrichment.py
+│   └── test_specimen_rejection_analyzer.py
+├── cli.py                  # Command-line interface
+├── rejection_analyzer.py   # Core analyzer module
+├── enrichment.py           # Enrichment feature engines
+├── simulator.py            # Stress testing simulator
+├── pyproject.toml          # Project metadata
+├── Dockerfile              # Container build
+├── docker-compose.yml      # Container orchestration
+└── web/index.html          # Operations console UI
+```
+
+---
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
