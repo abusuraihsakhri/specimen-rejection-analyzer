@@ -31,7 +31,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
+    "httpx>=0.27",
 ]
+
+[tool.setuptools]
+py-modules = ["cli", "rejection_analyzer", "enrichment", "simulator"]
 
 [project.scripts]
 specimen-rejection-analyzer = "cli:main"

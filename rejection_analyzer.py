@@ -42,24 +42,32 @@ def lookup(query, extra=None):
         score += overlap * 2
         scored.append((score, label))
     scored.sort(reverse=True, key=lambda x: x[0])
-    top = scored[0] if scored else (0, "no match")
-    return {"query": query, "top_hit": top[1], "score": top[0], "all": scored[:3]}
+    top = scored[0] if scored and scored[0][0] > 0 else (0, "No match")
+    return {"query": query, "top_hit": top[1], "score": top[0], "all": [(v, k) for v, k in scored[:3] if v > 0]}
 
 def process_csv(inp,out):
     with open(inp, newline="", encoding="utf-8-sig") as f:
-        r=csv.DictReader(f); rows=list(r); fn=r.fieldnames
-        # guess query column
+        r=csv.DictReader(f); fn=r.fieldnames
+        if not fn or any(not col for col in fn):
+            raise ValueError("Input CSV must contain a nonempty header row")
+        if len(set(fn)) != len(fn):
+            raise ValueError("Input CSV contains duplicate column names")
+        rows=list(r)
+        if any(None in row for row in rows):
+            raise ValueError("Input CSV contains rows with too many columns")
         qcol = fn[0]
-        for cand in ["query","test","drug","code","variant","hla","lab","name"]:
-            if cand in [c.lower() for c in fn]:
-                qcol = [c for c in fn if c.lower()==cand][0]; break
+        for cand in ["rejection_reason", "reason", "description", "query", "test", "drug", "code", "variant", "hla", "lab", "name"]:
+            match = next((col for col in fn if col.strip().lower() == cand), None)
+            if match is not None:
+                qcol = match
+                break
         results=[]
         for row in rows:
             res=lookup(row.get(qcol,""), row)
             merged={**row, "top_hit": res["top_hit"], "lookup_score": res["score"]}
             results.append(merged)
     with open(out,"w",newline="",encoding="utf-8") as f:
-        w=csv.DictWriter(f, fieldnames=list(fn)+["top_hit","lookup_score"]); w.writeheader(); w.writerows(results)
+        w=csv.DictWriter(f, fieldnames=list(fn)+[c for c in ("top_hit", "lookup_score") if c not in fn]); w.writeheader(); w.writerows(results)
     return results
 
 def build_parser():

@@ -3,6 +3,7 @@ Supervisor Orchestrator & Operations Intelligence for Specimen Rejection Analyze
 Domain: Clinical & Biomedical AI
 """
 import uuid
+import json
 from typing import Dict, List
 from .base import AuditLogger, ActionExecutor, PHIGuard
 from .models import SystemTaskPayload, AgentAlert, ConsensusDossier, UrgencyLevel, SystemIntegrityStatus
@@ -25,6 +26,7 @@ class SystemSupervisor:
         PHIGuard.assert_no_phi(payload.task_id)
         PHIGuard.assert_no_phi(payload.target_identifier)
         PHIGuard.assert_no_phi(payload.status_descriptor)
+        PHIGuard.assert_no_phi(json.dumps(payload.attributes, default=str))
 
         # Multi-worker evaluations
         all_alerts: List[AgentAlert] = []
@@ -75,5 +77,5 @@ class SystemSupervisor:
 
     def query_supervisory_chat(self, query: str) -> str:
         PHIGuard.assert_no_phi(query)
-        prompt = f"Supervisor inquiry for Specimen Rejection Analyzer under CAP / CLSI / ISO Standards: {query}"
+        prompt = f"Supervisor inquiry for Specimen Rejection Analyzer (unvalidated demonstration): {query}"
         return self.llm.invoke(prompt)
