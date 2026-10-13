@@ -36,6 +36,7 @@ const doc = {
   body: new Element("body"),
 };
 let downloadCalled = false;
+let downloadedBlob = null;
 const originalCreateElement = doc.createElement;
 doc.createElement = function (tag) {
   const result = originalCreateElement(tag);
@@ -44,7 +45,7 @@ doc.createElement = function (tag) {
 };
 vm.runInNewContext(match[1], {
   document: doc, Blob, URL: {
-    createObjectURL() { return "blob:fake"; },
+    createObjectURL(blob) { downloadedBlob = blob; return "blob:fake"; },
     revokeObjectURL() {},
   },
   setTimeout() {},
@@ -77,6 +78,11 @@ assert.equal(el("export").disabled, true);
   assert.equal(el("rejected").textContent, "1");
   assert.equal(el("rate").textContent, "50.0%");
   assert.equal(el("table-body").children[0].children[0].textContent, "Broken, tube");
+
+  fileInput.files = [{name: "formula.csv", size: 70, async text() { return "reason,status\n=2+2,rejected"; }}];
+  await fileInput.handlers.change({target: fileInput});
+  el("export").click();
+  assert.ok((await downloadedBlob.text()).includes("\"'=2+2\""), "CSV formula neutralized");
 
   fileInput.files = [{name: "bad.csv", size: 30, async text() { return "unexpected\nvalue"; }}];
   await fileInput.handlers.change({target: fileInput});
