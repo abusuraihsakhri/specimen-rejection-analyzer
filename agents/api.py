@@ -1,9 +1,12 @@
 """
 FastAPI REST API Server for Specimen Rejection Analyzer.
 """
-from fastapi import FastAPI, HTTPException
+import os
+import hmac
+from fastapi import FastAPI, HTTPException, Header, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from .base import AuditLogger, PHIGuard
+from .base import AuditLogger, PHIGuard, SecurityException
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
 
@@ -12,8 +15,13 @@ supervisor = SystemSupervisor(model_provider="mock")
 app = FastAPI(
     title="Specimen Rejection Analyzer API",
     description="Enterprise Distributed Component Platform (Clinical & Biomedical AI)",
-    version="3.0.0-ENTERPRISE",
+    version="3.0.0",
 )
+
+
+@app.exception_handler(SecurityException)
+async def blocked_identifier(request: Request, exc: SecurityException):
+    return JSONResponse(status_code=422, content={"detail": "Sensitive identifier detected. Supply de-identified data."})
 
 
 class ChatRequest(BaseModel):
@@ -22,7 +30,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "specimen-rejection-analyzer", "domain": "Clinical & Biomedical AI", "standard": "CAP / CLSI / ISO Standards", "version": "3.0.0-ENTERPRISE"}
+    return {"status": "HEALTHY", "service": "specimen-rejection-analyzer", "domain": "Clinical & Biomedical AI", "standard": "CAP / CLSI / ISO Standards", "version": "3.0.0"}
 
 
 @app.get("/metrics")
@@ -30,7 +38,7 @@ def metrics():
     return {
         "dossiers_processed_total": len(supervisor.dossier_registry),
         "audit_blocks_total": len(AuditLogger.get_trail()),
-        "system_status": "NOMINAL_OPTIMAL"
+        "system_status": "AUDIT_VALID" if AuditLogger.verify_integrity() else "AUDIT_INVALID"
     }
 
 
@@ -50,5 +58,11 @@ def api_chat(req: ChatRequest):
 
 
 @app.get("/api/audit/logs")
-def api_audit_logs():
+def api_audit_logs(x_audit_token: str | None = Header(default=None)):
+    """Audit access is disabled by default and requires a separate shared secret."""
+    token = os.environ.get("API_AUDIT_TOKEN")
+    if not token:
+        raise HTTPException(status_code=503, detail="Audit log access is not configured")
+    if x_audit_token is None or not hmac.compare_digest(x_audit_token, token):
+        raise HTTPException(status_code=403, detail="Invalid audit access token")
     return {"audit_trail": AuditLogger.get_trail(), "verified": AuditLogger.verify_integrity()}
