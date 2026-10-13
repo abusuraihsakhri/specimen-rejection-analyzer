@@ -14,7 +14,7 @@ supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Specimen Rejection Analyzer API",
-    description="Enterprise Distributed Component Platform (Clinical & Biomedical AI)",
+    description="Rule-based demonstration for laboratory quality workflows",
     version="3.0.0",
 )
 
@@ -30,7 +30,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "specimen-rejection-analyzer", "domain": "Clinical & Biomedical AI", "standard": "CAP / CLSI / ISO Standards", "version": "3.0.0"}
+    return {"status": "HEALTHY", "service": "specimen-rejection-analyzer", "domain": "Clinical & Biomedical AI", "standard": "Unvalidated demonstration rules", "version": "3.0.0"}
 
 
 @app.get("/metrics")
