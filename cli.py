@@ -3,6 +3,7 @@ Command Line Interface for Specimen Rejection Analyzer.
 """
 import argparse
 import csv
+import math
 import sys
 from pathlib import Path
 from agents.models import SystemTaskPayload
@@ -30,7 +31,8 @@ def _safe_float(value, field_name: str, default: float = 0.0) -> float:
     if value is None or str(value).strip() == "":
         return default
     try:
-        return float(value)
+        parsed = float(value)
+        return parsed if math.isfinite(parsed) else default
     except (ValueError, TypeError):
         return default
 
@@ -105,13 +107,19 @@ def main(argv=None):
     if args.command == "batch":
         in_path = _resolve_safe_path(args.input, must_exist=True)
         out_path = _resolve_safe_path(args.output, must_exist=False)
+        if in_path == out_path:
+            raise ValueError("Input and output CSV must be different files")
 
         with open(in_path, mode="r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
             fieldnames = list(reader.fieldnames or [])
+            if not fieldnames or any(not col for col in fieldnames) or len(set(fieldnames)) != len(fieldnames):
+                raise ValueError("Input CSV requires unique, nonempty column headers")
             rows = list(reader)
+            if any(None in row for row in rows):
+                raise ValueError("Input CSV contains rows with too many columns")
 
-        out_fields = fieldnames + ["overall_urgency", "integrity_status", "total_alerts", "audit_hash"]
+        out_fields = fieldnames + [col for col in ("overall_urgency", "integrity_status", "total_alerts", "audit_hash") if col not in fieldnames]
         out_rows = []
         for r in rows:
             payload = SystemTaskPayload(
