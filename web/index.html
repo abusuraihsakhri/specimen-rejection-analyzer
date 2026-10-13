@@ -1,236 +1,255 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Specimen Rejection Analyzer — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Locally analyze specimen rejection logs, rates, Pareto distribution and trends.">
+  <title>Specimen Rejection Analyzer</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:dark;--bg:#0b1220;--panel:#121d30;--line:#29394d;--text:#eef3fc;--muted:#afbdcf;--blue:#6eb2ff;--red:#f4a095}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);line-height:1.5}
+    main{max-width:1110px;margin:auto;padding:26px 22px 70px}header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:26px;flex-wrap:wrap}
+    h1{font-size:clamp(1.6rem,3vw,2.3rem);letter-spacing:-.035em;line-height:1.15;margin:4px 0 9px}h2{font-size:1.12rem;margin:0 0 12px}p{margin:0 0 12px}
+    .eyebrow{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--blue)}
+    .subtle,.hint{color:var(--muted)}.subtle{max-width:720px;font-size:.93rem}
+    .tag{border:1px solid #407058;border-radius:100px;color:#a8e6ca;padding:7px 13px;font-size:.8rem;white-space:nowrap}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:22px}
+    .toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.btn{appearance:none;cursor:pointer;padding:10px 16px;border:1px solid #557b9e;border-radius:8px;background:#214766;color:#fff;font:inherit;font-weight:600;min-height:44px}
+    .btn:hover{background:#295879}.btn.secondary{background:transparent;border-color:#52647c}.btn.secondary:hover{background:#223149}.btn:disabled{opacity:.48;cursor:not-allowed}
+    input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+    :focus-visible{outline:3px solid #9bceff;outline-offset:3px}
+    .hint{font-size:.82rem;margin-top:11px}.status{min-height:1.6em;margin:12px 0 0;color:#c2e5d5;font-size:.89rem}.status.error{color:#ffbcb4}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:19px 0}.stat strong{font-size:clamp(1.35rem,2.6vw,2rem);display:block;font-variant-numeric:tabular-nums}.stat span{font-size:.81rem;color:var(--muted)}
+    .cols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:18px}.chartrow{display:grid;grid-template-columns:minmax(100px,1fr) 2.5fr auto;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #25354a;font-size:.87rem}
+    .bartrack{height:13px;background:#23354b;border-radius:4px;overflow:hidden}.bar{height:100%;background:#64aaf6}
+    .count{font-variant-numeric:tabular-nums;text-align:right;min-width:40px;color:#dae8f9}
+    .empty{padding:24px 0;color:var(--muted)}table{border-collapse:collapse;width:100%;font-size:.87rem;margin-top:10px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #2b3b50}th{color:#b9c9df;font-weight:600}td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+    .scroll{overflow-x:auto}section+section{margin-top:18px}.sectionline{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}small{color:var(--muted)}
+    .notice{background:#17273b;border-left:3px solid #74adf0;padding:11px 15px;color:#c7d9ea;font-size:.85rem;border-radius:4px;margin-top:15px}
+    footer{color:var(--muted);font-size:.8rem;margin-top:22px}
+    @media(max-width:800px){.cols{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:460px){main{padding:18px 13px 45px}.panel{padding:16px}.chartrow{grid-template-columns:1fr 1.3fr auto}.btn{width:100%}.toolbar{align-items:stretch}}
+  </style>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Specimen Rejection Analyzer</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
-        </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
-        </div>
+<main>
+  <header>
+    <div>
+      <div class="eyebrow">Laboratory quality · pre-analytical phase</div>
+      <h1>Specimen Rejection Analyzer</h1>
+      <p class="subtle">Inspect rejection frequency, rejection rate, Pareto distribution and monthly counts from a CSV log. All calculations run inside this browser.</p>
     </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
+    <div class="tag">Local processing · No uploads</div>
+  </header>
+  <section class="panel" aria-labelledby="upload-title">
+    <h2 id="upload-title">Import specimen log</h2>
+    <div class="toolbar">
+      <label class="btn" for="csv-file">Choose CSV file</label>
+      <input id="csv-file" type="file" accept=".csv,text/csv" aria-describedby="file-help">
+      <button id="demo" class="btn secondary" type="button">Load demonstration data</button>
+      <button id="clear" class="btn secondary" type="button">Clear results</button>
     </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Specimen Rejection Analyzer Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
+    <p id="file-help" class="hint">Comma-separated UTF-8 CSV, maximum 2 MB. Required: <strong>reason</strong> or <strong>rejection_reason</strong>. Optional: <strong>status</strong> (rejected/accepted) and <strong>date</strong> (YYYY-MM-DD). Without status, every record is treated as a rejection and the rate is not calculated.</p>
+    <p id="message" class="status" role="status" aria-live="polite">Choose a CSV file or load the demonstration dataset.</p>
+    <div class="notice">Use de-identified quality-management data only. The tool does not validate patient identifiers, assign clinical urgency or replace laboratory SOPs.</div>
+  </section>
+  <div class="stats" aria-label="Analysis summary">
+    <div class="panel stat"><span>Total specimens</span><strong id="total">—</strong></div>
+    <div class="panel stat"><span>Rejected specimens</span><strong id="rejected">—</strong></div>
+    <div class="panel stat"><span>Rejection rate</span><strong id="rate">—</strong></div>
+    <div class="panel stat"><span>Rejection reasons</span><strong id="categories">—</strong></div>
+  </div>
+  <div class="cols">
+    <section class="panel" aria-labelledby="pareto-title">
+      <div class="sectionline">
+        <h2 id="pareto-title">Rejection reasons · Pareto</h2>
+        <button id="export" class="btn secondary" type="button" disabled>Export summary CSV</button>
+      </div>
+      <div id="pareto" class="empty">No data loaded.</div>
+      <div class="scroll">
+        <table aria-label="Reasons and cumulative percentage">
+          <thead><tr><th>Reason</th><th class="num">Count</th><th class="num">% rejected</th><th class="num">Cumulative %</th></tr></thead>
+          <tbody id="table-body"><tr><td colspan="4" class="subtle">Import data to view a summary.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <div>
+      <section class="panel" aria-labelledby="trend-title">
+        <h2 id="trend-title">Monthly rejection counts</h2>
+        <div id="trend" class="empty">Include a date column to view monthly counts.</div>
+      </section>
+      <section class="panel" aria-labelledby="notes-title">
+        <h2 id="notes-title">How metrics are calculated</h2>
+        <p class="hint">The rejection rate is <strong>rejected specimens / all valid specimens × 100</strong> when a status column identifies accepted and rejected specimens. The Pareto denominator is rejected specimens only.</p>
+        <p class="hint">Reasons are grouped case-insensitively, after whitespace normalization. Blank reasons are reported as “Unspecified”. Monthly bars show <strong>counts</strong>, not rates; records without valid ISO dates are omitted from that chart.</p>
+      </section>
     </div>
+  </div>
+  <footer>Descriptive quality-control reporting only. No statistical significance or CAP/CLSI certification is implied.</footer>
+</main>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const limit = 2 * 1024 * 1024;
+  let summary = [];
+  const demoCsv = "reason,status,date\nHemolyzed sample,rejected,2026-01-05\nClotted specimen,rejected,2026-01-07\nHemolyzed sample,rejected,2026-01-08\n,accepted,2026-01-12\nInsufficient volume,rejected,2026-02-02\n,accepted,2026-02-09\nHemolyzed Sample,rejected,2026-02-14\n,accepted,2026-02-18\nMislabeled specimen,rejected,2026-03-02\n,accepted,2026-03-03";
 
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "specimen-rejection-analyzer",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+  function csvParse(input) {
+    const text = input.replace(/^\uFEFF/, "");
+    const records = [], row = [];
+    let field = "", quoted = false, closed = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (quoted) {
+        if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
+        else if (c === '"') { quoted = false; closed = true; }
+        else { field += c; }
+      } else if (c === '"' && !field && !closed) { quoted = true; }
+      else if (c === ",") { row.push(field); field = ""; closed = false; }
+      else if (c === "\n" || c === "\r") {
+        if (c === "\r" && text[i + 1] === "\n") i++;
+        row.push(field);
+        if (row.some((value) => value.trim() !== "")) records.push(row.slice());
+        row.length = 0; field = ""; closed = false;
+      } else if (closed && c !== " " && c !== "\t") {
+        throw new Error("Unexpected character after a quoted CSV field.");
+      } else if (!closed) { field += c; }
+    }
+    if (quoted) throw new Error("Unclosed quote in CSV.");
+    row.push(field);
+    if (row.some((value) => value.trim() !== "")) records.push(row);
+    if (records.length < 2) throw new Error("CSV needs a header and at least one data row.");
+    return records;
+  }
+  function make(tag, text, cls) {
+    const el = document.createElement(tag);
+    if (text !== undefined) el.textContent = text;
+    if (cls) el.className = cls;
+    return el;
+  }
+  function normalize(text) { return String(text || "").trim().replace(/\s+/g, " "); }
+  function cellHeaderIndex(head, options) { return head.findIndex((name) => options.includes(name)); }
+  function statusOf(text) {
+    const value = normalize(text).toLowerCase();
+    if (["rejected", "reject", "yes", "true", "1"].includes(value)) return true;
+    if (["accepted", "accept", "no", "false", "0"].includes(value)) return false;
+    throw new Error("Invalid status value: " + (value || "(empty)") + ". Expected rejected or accepted.");
+  }
+  function isoMonth(text) {
+    const value = normalize(text);
+    if (!/^\d{4}-\d{2}-\d{2}(?:$|[T ])/u.test(value)) return null;
+    const y = Number(value.slice(0, 4)), m = Number(value.slice(5, 7)), d = Number(value.slice(8, 10));
+    const test = new Date(Date.UTC(y, m - 1, d));
+    return test.getUTCFullYear() === y && test.getUTCMonth() + 1 === m && test.getUTCDate() === d ? value.slice(0, 7) : null;
+  }
+  function barList(target, items, max, formatter) {
+    target.replaceChildren();
+    if (!items.length) { target.className = "empty"; target.textContent = "No matching records."; return; }
+    target.className = "";
+    for (const item of items) {
+      const row = make("div", undefined, "chartrow");
+      const label = make("div", item.label);
+      const track = make("div", undefined, "bartrack");
+      const bar = make("div", undefined, "bar");
+      bar.style.width = ((item.count / Math.max(1, max)) * 100).toFixed(2) + "%";
+      track.append(bar);
+      row.append(label, track, make("div", formatter(item.count), "count"));
+      target.append(row);
+    }
+  }
+  function analyze(raw, label) {
+    const records = csvParse(raw);
+    const headers = records[0].map((name) => normalize(name).toLowerCase());
+    if (headers.some((name) => !name) || new Set(headers).size !== headers.length) throw new Error("Headers must be unique and nonempty.");
+    const reasonIndex = cellHeaderIndex(headers, ["rejection_reason", "reason", "description"]);
+    const statusIndex = cellHeaderIndex(headers, ["status", "rejected", "rejection_status"]);
+    const dateIndex = cellHeaderIndex(headers, ["date", "collection_date", "rejection_date", "received_at"]);
+    if (reasonIndex < 0) throw new Error("Missing reason or rejection_reason column.");
+    const byReason = new Map(), months = new Map();
+    let count = 0, rejected = 0;
+    for (let i = 1; i < records.length; i++) {
+      const row = records[i];
+      if (row.length !== headers.length) throw new Error("Row " + (i + 1) + " has " + row.length + " cells; expected " + headers.length + ".");
+      count++;
+      const reject = statusIndex < 0 ? true : statusOf(row[statusIndex]);
+      if (!reject) continue;
+      rejected++;
+      const reason = normalize(row[reasonIndex]) || "Unspecified";
+      const key = reason.toLocaleLowerCase();
+      const item = byReason.get(key);
+      if (item) item.count++; else byReason.set(key, {label: reason, count: 1});
+      if (dateIndex >= 0) {
+        const month = isoMonth(row[dateIndex]);
+        if (month) months.set(month, (months.get(month) || 0) + 1);
+      }
+    }
+    summary = [...byReason.values()].sort((a,b) => b.count - a.count || a.label.localeCompare(b.label));
+    $("total").textContent = count.toLocaleString();
+    $("rejected").textContent = rejected.toLocaleString();
+    $("rate").textContent = statusIndex < 0 ? "N/A" : (100 * rejected / count).toFixed(1) + "%";
+    $("categories").textContent = summary.length.toLocaleString();
+    barList($("pareto"), summary, summary.length ? summary[0].count : 1, (n) => String(n));
+    const tbody = $("table-body");
+    tbody.replaceChildren();
+    let cumulative = 0;
+    if (!summary.length) {
+      const tr = make("tr"), td = make("td", "No rejections in this dataset.");
+      td.colSpan = 4; tr.append(td); tbody.append(tr);
+    }
+    for (const item of summary) {
+      cumulative += item.count;
+      const tr = make("tr");
+      [item.label, String(item.count), (100 * item.count / rejected).toFixed(1) + "%", (100 * cumulative / rejected).toFixed(1) + "%"].forEach((txt, index) => {
+        tr.append(make("td", txt, index ? "num" : ""));
+      });
+      tbody.append(tr);
+    }
+    const monthly = [...months.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([month, n]) => ({label:month,count:n}));
+    barList($("trend"), monthly, Math.max(1, ...monthly.map((a) => a.count)), (n) => String(n));
+    if (!monthly.length) $("trend").textContent = "No valid ISO dates for rejected specimens.";
+    $("export").disabled = !summary.length;
+    $("message").className = "status";
+    $("message").textContent = label + ": " + count + " specimens processed. " + (statusIndex < 0 ? "Rejection rate unavailable (no status column)." : "");
+  }
+  function clear() {
+    summary = [];
+    for (const id of ["total", "rejected", "rate", "categories"]) $(id).textContent = "—";
+    $("pareto").className = "empty"; $("pareto").textContent = "No data loaded.";
+    $("trend").className = "empty"; $("trend").textContent = "Include a date column to view monthly counts.";
+    const tr = make("tr"), td = make("td", "Import data to view a summary.");
+    td.colSpan = 4; tr.append(td); $("table-body").replaceChildren(tr);
+    $("export").disabled = true; $("csv-file").value = "";
+    $("message").className = "status"; $("message").textContent = "Results cleared.";
+  }
+  $("demo").addEventListener("click", () => { try { analyze(demoCsv, "Demonstration dataset"); } catch (err) { showError(err); } });
+  $("clear").addEventListener("click", clear);
+  function showError(err) { clear(); $("message").className = "status error"; $("message").textContent = err.message || "Could not process the CSV."; }
+  $("csv-file").addEventListener("change", async (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (file.size > limit) { showError(new Error("File exceeds the 2 MB limit.")); return; }
+    try { analyze(await file.text(), file.name); } catch (err) { showError(err); }
+  });
+  function quoteCsv(value) { return '"' + String(value).replace(/"/g, '""') + '"'; }
+  $("export").addEventListener("click", () => {
+    if (!summary.length) return;
+    const total = summary.reduce((n,x) => n + x.count, 0);
+    let running = 0;
+    const lines = ["reason,count,percent_of_rejections,cumulative_percent"];
+    for (const entry of summary) {
+      running += entry.count;
+      lines.push([quoteCsv(entry.label), entry.count, (100 * entry.count / total).toFixed(2), (100 * running / total).toFixed(2)].join(","));
+    }
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n") + "\r\n"], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "specimen-rejection-summary.csv";
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+})();
+</script>
 </body>
 </html>
