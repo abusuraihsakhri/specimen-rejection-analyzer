@@ -59,6 +59,6 @@ def api_audit_logs(x_audit_token: str | None = Header(default=None)):
     token = os.environ.get("API_AUDIT_TOKEN")
     if not token:
         raise HTTPException(status_code=503, detail="Audit log access is not configured")
-    if x_audit_token is None or not hmac.compare_digest(x_audit_token, token):
+    if not isinstance(x_audit_token, str) or not hmac.compare_digest(x_audit_token, token):
         raise HTTPException(status_code=403, detail="Invalid audit access token")
     return {"audit_trail": AuditLogger.get_trail(), "verified": AuditLogger.verify_integrity()}
