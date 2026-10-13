@@ -190,7 +190,7 @@
     $("rejected").textContent = rejected.toLocaleString();
     $("rate").textContent = statusIndex < 0 ? "N/A" : (100 * rejected / count).toFixed(1) + "%";
     $("categories").textContent = summary.length.toLocaleString();
-    barList($("pareto"), summary, summary.length ? summary[0].count : 1, (n) => String(n));
+    barList($("pareto"), summary.slice(0, 40), summary.length ? summary[0].count : 1, (n) => String(n));
     const tbody = $("table-body");
     tbody.replaceChildren();
     let cumulative = 0;
@@ -198,7 +198,7 @@
       const tr = make("tr"), td = make("td", "No rejections in this dataset.");
       td.colSpan = 4; tr.append(td); tbody.append(tr);
     }
-    for (const item of summary) {
+    for (const item of summary.slice(0, 200)) {
       cumulative += item.count;
       const tr = make("tr");
       [item.label, String(item.count), (100 * item.count / rejected).toFixed(1) + "%", (100 * cumulative / rejected).toFixed(1) + "%"].forEach((txt, index) => {
@@ -211,7 +211,7 @@
     if (!monthly.length) $("trend").textContent = "No valid ISO dates for rejected specimens.";
     $("export").disabled = !summary.length;
     $("message").className = "status";
-    $("message").textContent = label + ": " + count + " specimens processed. " + (statusIndex < 0 ? "Rejection rate unavailable (no status column)." : "");
+    $("message").textContent = label + ": " + count + " specimens processed. " + (statusIndex < 0 ? "Rejection rate unavailable (no status column). " : "") + (summary.length > 200 ? "Showing first 200 reasons; exported summary includes all. " : "") + (summary.length > 40 ? "Pareto chart shows top 40." : "");
   }
   function clear() {
     summary = [];
@@ -232,7 +232,11 @@
     if (file.size > limit) { showError(new Error("File exceeds the 2 MB limit.")); return; }
     try { analyze(await file.text(), file.name); } catch (err) { showError(err); }
   });
-  function quoteCsv(value) { return '"' + String(value).replace(/"/g, '""') + '"'; }
+  function quoteCsv(value) {
+    const raw = String(value);
+    const safe = /^[=+\-@\t\r]/.test(raw) ? "'" + raw : raw;
+    return '"' + safe.replace(/"/g, '""') + '"';
+  }
   $("export").addEventListener("click", () => {
     if (!summary.length) return;
     const total = summary.reduce((n,x) => n + x.count, 0);
