@@ -6,7 +6,7 @@ import hmac
 from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from .base import AuditLogger, PHIGuard, SecurityException
+from .base import AuditLogger, SecurityException
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
 
@@ -50,11 +50,7 @@ def api_audit(payload: SystemTaskPayload):
 
 @app.post("/api/chat")
 def api_chat(req: ChatRequest):
-    try:
-        ans = supervisor.query_supervisory_chat(req.query)
-        return {"response": ans}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return {"response": supervisor.query_supervisory_chat(req.query)}
 
 
 @app.get("/api/audit/logs")
